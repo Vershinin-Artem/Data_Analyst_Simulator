@@ -1,4 +1,4 @@
-# КУРС "СИМУЛЯТОР АНАЛИТИКА ДАННЫХ" 
+![Описание изображения](https://sun9-67.userapi.com/impg/rSHiylxAeR61REFdsVFe3G-BQU9ML9PJ4_nzZw/C9qVqZFcCcs.jpg?size=1280x171&quality=95&sign=161db6ee27a13d7248a03c5143012eb7&type=album)
 
 
 

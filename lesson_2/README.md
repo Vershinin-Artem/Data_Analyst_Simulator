@@ -1,5 +1,6 @@
 # АНАЛИЗ ПРОДУКТОВЫХ МЕТРИК
 ## Проанализировать retention rate у пользователей пришедших через платный трафик (source = 'ads') и через органические каналы (source = 'organic'), проанализировать результат рекламной кампании, в результате которой в приложение пришло много новых пользователей и найти причины внезапного падения активности пользователей в один из дней
+
 # Задание 1
 
 В наших данных использования ленты новостей есть два типа юзеров: те, кто пришел через платный трафик `source = 'ads'`, и те, кто пришел через органические каналы `source = 'organic'`.
@@ -52,7 +53,7 @@
 
 Посмотрим Retention rate 1, 7 и 14 дня для когорты пользователей, привлечённых 16 января.
 
-### SQL-запрос для определения Retention Rate:
+SQL-запрос для определения Retention Rate:
 
 ```sql
 WITH
@@ -121,7 +122,7 @@ SELECT (SELECT count_user_0_day FROM t1) as count_user_0_day,
 
 25 января 2025 года наблюдалось **значительное снижение активности пользователей ленты новостей на 13%**. Для выявления причин падения посещаемости проведён анализ данных в разрезе городов.
 
-### SQL-запрос для анализа посещаемости по городам:
+SQL-запрос для анализа посещаемости по городам:
 
 ```sql
 WITH
@@ -144,5 +145,67 @@ LIMIT 5;
 ```
 
 **Результаты анализа показали, что пользователи из топ-4 городов практически не проявляли активности 25 января, что указывает на возможные технические проблемы.**
+
+<div style="text-align: center;">
+  <img src="https://sun9-66.userapi.com/impg/koCFrY00sDWsyeU6wf8WQCXxQw7SQj3yaP9vZQ/4IEnJ842ZLo.jpg?size=1153x534&quality=95&sign=8e4a78ef2c972d002e8016d56aaa143f&type=album" alt="p" style="display: inline-block;">
+</div>
+
+# Задание 3
+
+Постройте график, на котором отобразите активную аудиторию по неделям, для каждой недели выделим три типа пользователей.
+
+Новые — первая активность в ленте была на этой неделе.
+
+Старые — активность была и на этой, и на прошлой неделе.
+
+Ушедшие — активность была на прошлой неделе, на этой не было.
+
+SQL запрос трафика ленты новостей:
+
+```sql
+SELECT 
+    -toInt64(uniq(user_id)) AS num_users, 
+    this_week, 
+    previous_week, 
+    status
+FROM (
+    SELECT 
+        user_id,
+        groupUniqArray(toMonday(toDate(time))) AS weeks_visited,
+        addWeeks(arrayJoin(weeks_visited), +1) AS this_week,
+        if(has(weeks_visited, this_week) = 1, 'retained', 'gone') AS status,
+        addWeeks(this_week, -1) AS previous_week
+    FROM simulator_20250120.feed_actions
+    GROUP BY user_id
+)
+WHERE status = 'gone'
+GROUP BY this_week, previous_week, status
+
+UNION ALL
+
+SELECT 
+    toInt64(uniq(user_id)) AS num_users, 
+    this_week, 
+    previous_week, 
+    status
+FROM (
+    SELECT 
+        user_id,
+        groupUniqArray(toMonday(toDate(time))) AS weeks_visited,
+        arrayJoin(weeks_visited) AS this_week,
+        if(has(weeks_visited, addWeeks(this_week, -1)) = 1, 'retained', 'new') AS status,
+        addWeeks(this_week, -1) AS previous_week
+    FROM simulator_20250120.feed_actions
+    GROUP BY user_id
+)
+GROUP BY this_week, previous_week, status
+```
+
+<div style="text-align: center;">
+  <img src="https://sun9-77.userapi.com/impg/4KaTDnbWDD4QXJMYfRe6TnJPb3Rx6NMcUr91Zg/mH6H1lkJI9w.jpg?size=1280x488&quality=95&sign=ebe4585a9a6b59baefc06c046aeacc64&type=album" alt="p" style="display: inline-block;">
+</div>
+
+
+
 
 
